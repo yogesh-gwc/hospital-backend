@@ -53,6 +53,8 @@ export async function findPatientByIdentifier(identifier: unknown, dobInput: unk
 
 export interface BookingInput {
   isNewPatient: boolean;
+  /** Set only from a verified portal token, never from the request body. */
+  portalPatientId?: string;
   identifier?: string;
   dateOfBirth?: string | Date;
   firstName?: string;
@@ -115,7 +117,12 @@ export async function createPublicBooking(
 
   let patient;
 
-  if (input.isNewPatient) {
+  if (input.portalPatientId) {
+    // Already proved who they are when they signed in to the portal; asking
+    // for the date of birth again is what broke "Book another".
+    patient = await Patient.findById(input.portalPatientId);
+    if (!patient) throw badRequest(LOOKUP_FAILED);
+  } else if (input.isNewPatient) {
     const { firstName, lastName, phone } = input;
     if (!firstName || !lastName || !input.dateOfBirth || !phone) {
       throw badRequest('Name, date of birth and phone number are required');

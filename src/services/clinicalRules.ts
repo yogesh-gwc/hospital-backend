@@ -1,9 +1,13 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const rulesDir = resolve(here, '../../../agents/rules');
+// The rules live in the agent service; it may be checked out as `agents/` or `agent/`.
+const rulesDir =
+  ['../../../agents/rules', '../../../agent/rules']
+    .map((p) => resolve(here, p))
+    .find((p) => existsSync(p)) ?? resolve(here, '../../../agents/rules');
 
 function load<T>(file: string): T {
   return JSON.parse(readFileSync(resolve(rulesDir, file), 'utf8')) as T;

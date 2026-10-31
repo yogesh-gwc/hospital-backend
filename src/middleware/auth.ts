@@ -91,6 +91,27 @@ export function requirePortal(req: Request, _res: Response, next: NextFunction):
   }
 }
 
+/**
+ * Like requirePortal, but never rejects: a signed-in patient gets
+ * `portalPatientId`, anyone else passes through untouched. Lets a public
+ * route trust the session instead of asking for the date of birth again.
+ */
+export function optionalPortal(req: Request, _res: Response, next: NextFunction): void {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) return next();
+  try {
+    const payload = jwt.verify(header.slice(7), env.JWT_SECRET) as jwt.JwtPayload;
+    if (payload.scope === 'portal' && payload.patientRef) {
+      (req as Request & { portalPatientId?: string }).portalPatientId = String(
+        payload.patientRef
+      );
+    }
+  } catch {
+    /* an expired session just falls back to the normal lookup */
+  }
+  next();
+}
+
 /** Attaches req.user when a valid token is present, but never rejects. */
 export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
   const header = req.headers.authorization;

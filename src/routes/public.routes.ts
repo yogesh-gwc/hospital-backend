@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as c from '../controllers/public.controller.js';
-import { requirePortal } from '../middleware/auth.js';
+import { optionalPortal, requirePortal } from '../middleware/auth.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { validate } from '../middleware/validate.js';
 import {
@@ -49,7 +49,13 @@ router.get('/agent', browse, c.agentGreeting);
 router.post('/agent', booking, c.agentTurn);
 
 /* ── Booking and the portal ────────────────────────────────────────────── */
-router.post('/appointments', booking, validate(publicBookingSchema), c.bookAppointment);
+router.post(
+  '/appointments',
+  booking,
+  optionalPortal,
+  validate(publicBookingSchema),
+  c.bookAppointment
+);
 router.post('/portal/login', signIn, validate(portalLoginSchema), c.portalLogin);
 router.get('/portal/me', requirePortal, c.portalMe);
 

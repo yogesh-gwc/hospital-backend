@@ -140,7 +140,8 @@ export const doctorSlots = asyncHandler(async (req: Request, res: Response) => {
  * arrive, reception already has them.
  */
 export const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
-  const result = await createPublicBooking(req.body, req);
+  const portalPatientId = (req as Request & { portalPatientId?: string }).portalPatientId;
+  const result = await createPublicBooking({ ...req.body, portalPatientId }, req);
   res.status(201).json({
     ...result,
     symptomsRecorded: Array.isArray(req.body?.symptoms) ? req.body.symptoms.length : 0,
